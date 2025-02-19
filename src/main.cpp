@@ -1,68 +1,95 @@
-#include "rc_utils.h"
-#include "manual_utils.h"
+#include "pins.h"
+#include "rc_control.h"
+#include "manual_control.h"
 #include <Arduino.h>
+
+// Debugging options for the serial monitor
+#define INPUT_DEBUG false
+#define OUTPUT_DEBUG false
 
 unsigned int accLimit = 0; // 0-100
 unsigned int accValue = 0; // 0-100
 bool isBraking = false;
 bool isDirectionForward = true;
 
-
 void setup() {
-  Serial.begin(115200);
+  // Enable serial communication for debugging
+  if(INPUT_DEBUG || OUTPUT_DEBUG) Serial.begin(115200);
+
+  // Initialize control modules
+  manualSetup();
+  rcSetup();
+
+  // Initialize output pins
+  pinMode(PIN_OUTPUT_ACCEL, OUTPUT);
+  pinMode(PIN_OUTPUT_BRAKE, OUTPUT);
+  pinMode(PIN_OUTPUT_DIREC, OUTPUT);
 }
 
-void applyBrakes(){
-  // TODO: Complete code
+void setBrakes(bool isBraking){
+  if(isBraking)
+    digitalWrite(PIN_OUTPUT_BRAKE, HIGH);
+  else
+    digitalWrite(PIN_OUTPUT_BRAKE, LOW);
 }
 
 void setDirection(bool isDirectionForward){
-  // TODO: Complete code
+  if(isDirectionForward)
+    digitalWrite(PIN_OUTPUT_DIREC, HIGH);
+  else
+    digitalWrite(PIN_OUTPUT_DIREC, LOW);
 }
 
-void setAcceleration(int value){
-  // TODO: Complete code
+void setAcceleration(int pwmValue){
+  // PWM value: 0-255 -> 0%-100%
+  analogWrite(PIN_OUTPUT_ACCEL, pwmValue);
 }
 
-void process(){
-  // TODO: Move variables outside
-  bool isBraking = false;
-  bool isDirectionForward = true;
-  int accValue = 0; // 0-100
-  int accLimit = 0; // 0-100
+void outputDebug(){
+  Serial.print("OUTPUT - Mode: ");
+  Serial.print(rcIsOverrideEnabled() ? "RC" : "MANUAL");
+  Serial.print(" Acc: ");
+  Serial.print(accValue);
+  Serial.print(" Limit: ");
+  Serial.print(accLimit);
+  Serial.print(" isBraking: ");
+  Serial.print(isBraking);
+  Serial.print(" isDirForward: ");
+  Serial.println(isDirectionForward);
+}
 
-  if(isRadioEnabled()){
+void loop(){  
+  // Read input values for both modes
+  rcUpdateValues();
+  manualUpdateValues();
+
+  if(rcIsOverrideEnabled()){
     // === REMOTE CONTROL ===
     // Use the values coming from the RC emitter
-    isBraking = rcReadisBraking();
+    isBraking = manualIsBraking() || rcIsBraking(); // Allow manual brake override when on RC mode
     isDirectionForward = rcIsDirectionForward();
     accValue = rcReadAccValue();
     accLimit = rcReadLimitValue();
+    if(INPUT_DEBUG) rcDebug();
   } else {
     // === MANUAL CONTROL ===
     // Use the values from the kart's controls
-    isBraking = manualReadIsBraking();
-    isDirectionForward = manualReadIsDirectionForward();
+    isBraking = manualIsBraking();
+    isDirectionForward = manualIsDirectionForward();
     accValue = manualReadAccValue();
     accLimit = manualReadLimitValue();
+    if(INPUT_DEBUG) manualDebug();
   }
+
+  if(OUTPUT_DEBUG) outputDebug();
 
   // === APPLY VALUES ===
   // Brakes
-  if(isBraking){
-    applyBrakes();
-  }
+  setBrakes(isBraking);
 
   // Direction
   setDirection(isDirectionForward);
   
   // Accelerator
-  if(accValue > accLimit){
-    accValue = accLimit;
-  }
   setAcceleration(accValue);
-}
-
-void loop() {
-  rcUpdateValues();
 }
