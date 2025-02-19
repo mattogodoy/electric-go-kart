@@ -40,9 +40,9 @@ void setDirection(bool isDirectionForward){
     digitalWrite(PIN_OUTPUT_DIREC, LOW);
 }
 
-void setAcceleration(int pwmValue){
+void setAcceleration(int accValue){
   // PWM value: 0-255 -> 0%-100%
-  analogWrite(PIN_OUTPUT_ACCEL, pwmValue);
+  analogWrite(PIN_OUTPUT_ACCEL, map(accValue, 0, 100, 0, 255));
 }
 
 void outputDebug(){
