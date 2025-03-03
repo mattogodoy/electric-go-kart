@@ -10,4 +10,5 @@
 
 #define PIN_OUTPUT_ACCEL 9  // PWM output
 #define PIN_OUTPUT_BRAKE 11 // Digital output
-#define PIN_OUTPUT_DIREC 12 // Digital output
+#define PIN_OUTPUT_DIR_L 12 // Digital output (right motor)
+#define PIN_OUTPUT_DIR_R 7  // Digital output (left motor)

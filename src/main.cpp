@@ -23,7 +23,8 @@ void setup() {
   // Initialize output pins
   pinMode(PIN_OUTPUT_ACCEL, OUTPUT);
   pinMode(PIN_OUTPUT_BRAKE, OUTPUT);
-  pinMode(PIN_OUTPUT_DIREC, OUTPUT);
+  pinMode(PIN_OUTPUT_DIR_L, OUTPUT);
+  pinMode(PIN_OUTPUT_DIR_R, OUTPUT);
 }
 
 void setBrakes(bool isBraking){
@@ -34,10 +35,17 @@ void setBrakes(bool isBraking){
 }
 
 void setDirection(bool isDirectionForward){
-  if(isDirectionForward)
-    digitalWrite(PIN_OUTPUT_DIREC, HIGH);
-  else
-    digitalWrite(PIN_OUTPUT_DIREC, LOW);
+  // Since there is one motor per rear wheel (left and right),
+  // and they are installed in opposite sides, they also must
+  // have opposite directions
+
+  if(isDirectionForward){
+    digitalWrite(PIN_OUTPUT_DIR_L, HIGH);
+    digitalWrite(PIN_OUTPUT_DIR_R, LOW);
+  } else {
+    digitalWrite(PIN_OUTPUT_DIR_L, LOW);
+    digitalWrite(PIN_OUTPUT_DIR_R, HIGH);
+  }
 }
 
 void setAcceleration(int accValue){
