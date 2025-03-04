@@ -7,6 +7,10 @@ int manualBrakeValue = 0;
 int manualLimitValue = 100;
 bool manualDirectionValue = true;
 
+// Pedals have an input range from ~200 to ~600
+int minPedalValue = 200;
+int maxPedalValue = 600:
+
 void manualSetup(){
   pinMode(PIN_INPUT_MAN_ACCEL, INPUT); // Add pulldown resistor to this pin
   pinMode(PIN_INPUT_MAN_BRAKE, INPUT); // Add pulldown resistor to this pin
@@ -14,12 +18,27 @@ void manualSetup(){
   pinMode(PIN_INPUT_MAN_DIREC, INPUT_PULLUP);
 }
 
+int mapPedalValue(int value){
+  // Translate the pedal inputs to a value from 0 to 100.
+
+  // The map function returns funky values if you give it
+  // values lower than the minimum or higher than the maximum,
+  // so we limit them.
+  if(value < minPedalValue)
+    value = minPedalValue;
+
+  if(value > maxPedalValue)
+    value = maxPedalValue;
+
+  return map(value, minPedalValue, maxPedalValue, 0, 100);
+}
+
 bool manualIsBraking(){
+  int value = mapPedalValue(manualBrakeValue);
+
   // Braking happens with an analog pedal, but the motor controller
   // only accepts a boolean value for braking. We consider we're
   // braking when the pedal is pressed 40% or more.
-  // Pedals have an input range from 170 to 670
-  int value = map(manualBrakeValue, 170, 670, 0, 100);
   return (value > 40);
 }
 
@@ -29,10 +48,9 @@ bool manualIsDirectionForward(){
 }
 
 int manualReadAccValue(){
-  // Pedals have an input range from 170 to 670
-  int value = map(manualAccelValue, 170, 670, 0, 100);
+  int value = mapPedalValue(manualAccelValue);
 
-  // Apply accelerator limits
+  // Apply acceleration limits
   return (value > manualReadLimitValue()) ? manualReadLimitValue() : value;
 }
 
